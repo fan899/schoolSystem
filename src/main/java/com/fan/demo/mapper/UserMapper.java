@@ -1,12 +1,13 @@
 package com.fan.demo.mapper;
 
+import com.baomidou.mybatisplus.core.mapper.BaseMapper;
 import com.fan.demo.entity.User;
 import org.apache.ibatis.annotations.*;
 
 import java.util.List;
 
 //@Mapper
-public interface UserMapper {
+public interface UserMapper extends BaseMapper<User> {
 
     @Select("select * from sys_user")
     List<User> findAll();

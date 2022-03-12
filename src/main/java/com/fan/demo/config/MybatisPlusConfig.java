@@ -7,6 +7,7 @@ import org.mybatis.spring.annotation.MapperScan;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 
+// 配置mybatis-plus
 @Configuration
 @MapperScan("com.fan.demo.mapper") //扫描mapper包下的文件
 public class MybatisPlusConfig {

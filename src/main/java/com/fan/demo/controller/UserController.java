@@ -3,6 +3,7 @@ package com.fan.demo.controller;
 import com.fan.demo.entity.User;
 import com.fan.demo.mapper.UserMapper;
 import com.fan.demo.service.UserService;
+import io.swagger.annotations.Api;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.web.bind.annotation.*;
 
@@ -10,6 +11,7 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
+@Api(tags = "信息管理")
 @RestController
 @RequestMapping("/user")
 public class UserController {
@@ -22,9 +24,9 @@ public class UserController {
 
     // 新增&修改
     @PostMapping
-    public Integer save(@RequestBody User user) { //@RequestBody可以把前台json数据映射到实体类中
-        //用userService判断是更新还是新增
-        return userService.save(user);
+    public boolean save(@RequestBody User user) { // @RequestBody可以把前台json数据映射到实体类中
+        // 用userService判断是更新还是新增
+        return userService.saveUser(user);
     }
 
     // 删除数据
