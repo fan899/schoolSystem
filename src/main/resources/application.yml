@@ -1,0 +1,19 @@
+#修改端口防止冲突
+server:
+  port: 9090
+
+spring:
+  datasource:
+    driver-class-name: com.mysql.cj.jdbc.Driver
+    url: jdbc:mysql://127.0.0.1:3306/project?serverTimezone=GMT%2b8
+    username: root
+    password: 123456
+# 扫描该路径下所有的的xml文件(把我们编写的动态sql语句纳入springboot的管控下)
+mybatis:
+  mapper-locations: classpath:mapper/*.xml
+#  configuration:
+## 在控制台输出拼接之后的sql语句
+#    log-impl: org.apache.ibatis.logging.stdout.StdOutImpl
+mybatis-plus:
+  configuration:
+    log-impl: org.apache.ibatis.logging.stdout.StdOutImpl
