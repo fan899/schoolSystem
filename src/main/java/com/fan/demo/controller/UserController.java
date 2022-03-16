@@ -38,6 +38,12 @@ public class UserController {
         return userService.removeById(id); // 使用mybatis-plus接管
     }
 
+    // 批量删除
+    @PostMapping("/del/batch") // 修改接收方法，使其可以接收数组
+    public boolean deleteBatch(@RequestBody List<Integer> ids) { //将请求参数绑定到你控制器的方法参数上
+        return userService.removeByIds(ids); // 使用mybatis-plus接管
+    }
+
     // 查询所有数据
     @GetMapping
     public List<User> findAll() {
@@ -86,6 +92,7 @@ public class UserController {
         if (!address.equals("")) {
             queryWrapper.like("address", address); // 不添加and也可以，框架会自动补上
         }
+        queryWrapper.orderByDesc("id"); // 修改为根据id倒序显示
 //        queryWrapper.or().like("email", email); // 这个是sql语句 or条件
         return userService.page(page, queryWrapper);// 需要传入翻页对象page和实体对象封装操作类queryWrapper
 
