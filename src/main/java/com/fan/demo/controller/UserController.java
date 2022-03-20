@@ -6,6 +6,7 @@ import cn.hutool.poi.excel.ExcelWriter;
 import com.baomidou.mybatisplus.core.conditions.query.QueryWrapper;
 import com.baomidou.mybatisplus.core.metadata.IPage;
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
+import com.fan.demo.controller.dto.UserDTO;
 import com.fan.demo.entity.User;
 import com.fan.demo.service.UserService;
 import io.swagger.annotations.Api;
@@ -21,6 +22,7 @@ import java.io.InputStream;
 import java.io.UnsupportedEncodingException;
 import java.net.URLEncoder;
 import java.util.List;
+import cn.hutool.core.util.StrUtil;
 
 @Api(tags = "信息管理")
 @RestController
@@ -32,6 +34,16 @@ public class UserController {
 
     @Autowired(required = false)
     private UserService userService;
+
+    @PostMapping("/login")
+    public boolean login(@RequestBody UserDTO userDTO) { //@RequestBody: 将前端的JSON数据转成Java对象
+        String username = userDTO.getUsername();
+        String password = userDTO.getPassword();
+        if (StrUtil.isBlank(username) || StrUtil.isBlank(password)) { // 判断传入的数据是否为空或者为空格
+            return false;
+        }
+        return userService.login(userDTO);
+    }
 
     // 新增&修改
     @PostMapping
@@ -111,9 +123,9 @@ public class UserController {
         try {
             is = file.getInputStream();
             reader = ExcelUtil.getReader(is);
-            List<User> list = reader.readAll(User.class);
+            List<User> list = reader.readAll(User.class); // 根据user类读取数据并放入list中
 //            System.out.println(list);
-            userService.saveBatch(list);
+            userService.saveBatch(list); //
         } catch (IOException e) {
             e.printStackTrace();
         } finally {
