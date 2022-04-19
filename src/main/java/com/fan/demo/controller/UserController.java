@@ -6,6 +6,8 @@ import cn.hutool.poi.excel.ExcelWriter;
 import com.baomidou.mybatisplus.core.conditions.query.QueryWrapper;
 import com.baomidou.mybatisplus.core.metadata.IPage;
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
+import com.fan.demo.common.Constants;
+import com.fan.demo.common.Result;
 import com.fan.demo.controller.dto.UserDTO;
 import com.fan.demo.entity.User;
 import com.fan.demo.service.UserService;
@@ -22,6 +24,7 @@ import java.io.InputStream;
 import java.io.UnsupportedEncodingException;
 import java.net.URLEncoder;
 import java.util.List;
+
 import cn.hutool.core.util.StrUtil;
 
 @Api(tags = "信息管理")
@@ -36,13 +39,13 @@ public class UserController {
     private UserService userService;
 
     @PostMapping("/login")
-    public boolean login(@RequestBody UserDTO userDTO) { //@RequestBody: 将前端的JSON数据转成Java对象
+    public Result login(@RequestBody UserDTO userDTO) throws Exception { //@RequestBody: 将前端的JSON数据转成Java对象
         String username = userDTO.getUsername();
         String password = userDTO.getPassword();
         if (StrUtil.isBlank(username) || StrUtil.isBlank(password)) { // 判断传入的数据是否为空或者为空格
-            return false;
+            return Result.error(Constants.CODE_400, "参数错误");
         }
-        return userService.login(userDTO);
+        return Result.success(userService.login(userDTO));
     }
 
     // 新增&修改
@@ -73,7 +76,7 @@ public class UserController {
 
     // 导出接口
     @GetMapping("/export")
-    public void export(HttpServletResponse response){
+    public void export(HttpServletResponse response) {
         // 从数据库查询出所有的数据
         List<User> list = userService.list();
         // 通过工具类创建writer 写出到磁盘路径
@@ -140,7 +143,7 @@ public class UserController {
     }
 
 
-//    // 分页查询&总条数
+    //    // 分页查询&总条数
 //    // 分页查询的计算公式： y = (pageNum - 1) * pageSize; x = 每页显示多少条数据
 //    // SQL中的limit语句 limit y, x
 //    // limit中的y是截取值，即从第几个开始显示，默认起始值为0
@@ -166,14 +169,14 @@ public class UserController {
     // 分页查询 mybatis-plus
     @GetMapping("/page") // 路径： /user/page?pageNum=1&pageSize=10
     public IPage<User> findPage(@RequestParam Integer pageNum,
-                                        @RequestParam Integer pageSize,
-                                        @RequestParam(defaultValue = "") String username, // defaultValue 意思为默认值
-                                        @RequestParam(defaultValue = "") String email,
-                                        @RequestParam(defaultValue = "") String address) { // @RequestParam负责接收链接中get方式的参数并传入方法中
+                                @RequestParam Integer pageSize,
+                                @RequestParam(defaultValue = "") String username, // defaultValue 意思为默认值
+                                @RequestParam(defaultValue = "") String email,
+                                @RequestParam(defaultValue = "") String address) { // @RequestParam负责接收链接中get方式的参数并传入方法中
         IPage<User> page = new Page<>(pageNum, pageSize);
         QueryWrapper<User> queryWrapper = new QueryWrapper<>();
         if (!username.equals("")) { // 需要判断，当字段不为空时才会执行拼接操作，否则会以空为条件搜索
-            queryWrapper.like("username",username); // 用户名模糊查询
+            queryWrapper.like("username", username); // 用户名模糊查询
         }
         if (!email.equals("")) {
             queryWrapper.and(w -> w.like("email", email));

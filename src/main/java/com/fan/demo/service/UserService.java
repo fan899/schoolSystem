@@ -24,20 +24,20 @@ public class UserService extends ServiceImpl<UserMapper, User> {
 
     private static final Log LOG = Log.get();
 
-    public boolean login(UserDTO userDTO) {
+    public User login(UserDTO userDTO) throws Exception {
         QueryWrapper<User> queryWrapper = new QueryWrapper<>(); // 新建QueryWrapper对象
         queryWrapper.eq("username", userDTO.getUsername()); // 传入username
         queryWrapper.eq("password", userDTO.getPassword()); // 传入password
 
 //        List<User> list = list(queryWrapper); // 将查询结果全部存入list中
 //        return list.size() != 0; // 当集合的长度不为0时，即内部存有数据时，为true
-
+        User one = null;
         try {
-            User one = getOne(queryWrapper);
-            return one != null;
+            one = getOne(queryWrapper);
+            return one ;
         } catch (Exception e) { // 当返回的数据不止一条时，直接返回false
             LOG.error(e); // 出错时把错误写入log输出
-            return false;
+            throw new Exception("登录信息有误");
         }
 
         // 当数据库中存在相同用户名和密码的数据时，会返回两条或多条数据，进而导致后台报错，因为getOne仅能接收一条数据
