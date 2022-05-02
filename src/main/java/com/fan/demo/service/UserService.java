@@ -24,7 +24,7 @@ public class UserService extends ServiceImpl<UserMapper, User> {
 
     private static final Log LOG = Log.get();
 
-    public User login(UserDTO userDTO) throws Exception {
+    public User  login(UserDTO userDTO) throws Exception {
         QueryWrapper<User> queryWrapper = new QueryWrapper<>(); // 新建QueryWrapper对象
         queryWrapper.eq("username", userDTO.getUsername()); // 传入username
         queryWrapper.eq("password", userDTO.getPassword()); // 传入password

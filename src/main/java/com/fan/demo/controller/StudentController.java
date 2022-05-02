@@ -6,8 +6,8 @@ import cn.hutool.poi.excel.ExcelWriter;
 import com.baomidou.mybatisplus.core.conditions.query.QueryWrapper;
 import com.baomidou.mybatisplus.core.metadata.IPage;
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
-import com.fan.demo.entity.Major;
-import com.fan.demo.service.MajorService;
+import com.fan.demo.entity.Student;
+import com.fan.demo.service.StudentService;
 import io.swagger.annotations.Api;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.web.bind.annotation.*;
@@ -19,31 +19,40 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.io.UnsupportedEncodingException;
 import java.net.URLEncoder;
+import java.text.SimpleDateFormat;
+import java.util.Calendar;
+import java.util.Date;
 import java.util.List;
 
 /**
- * @ClassName: MajorController
+ * @ClassName: StudentController
  * @Description:
  * @Author fancy
- * @Date 2022/5/1
+ * @Date 2022/5/2
  * @Version 1.0
  */
-@Api(tags = "专业管理")
+@Api(tags = "学生管理")
 @RestController
-@RequestMapping("/major")
-public class MajorController {
+@RequestMapping("/student")
+public class StudentController {
 
     @Autowired
-    private MajorService majorService;
+    private StudentService studentService;
 
     /**
      * 新增&修改
-     * @param major
+     * @param student
      * @return
      */
     @PostMapping
-    public boolean save(@RequestBody Major major) {
-        return majorService.saveOrUpdate(major);
+    public boolean save(@RequestBody Student student) {
+        SimpleDateFormat dateFormat = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss");
+        Date date = new Date();
+        // 当id为null时，是新增数据，需要设置录入时间
+        if (student.getId() == null) {
+            student.setEntryDate(date);
+        }
+        return studentService.saveOrUpdate(student);
     }
 
     /**
@@ -53,7 +62,7 @@ public class MajorController {
      */
     @DeleteMapping("/{id}")
     public boolean delete(@PathVariable Integer id) {
-        return majorService.removeById(id);
+        return studentService.removeById(id);
     }
 
     /**
@@ -63,7 +72,7 @@ public class MajorController {
      */
     @PostMapping("/del/batch")
     public boolean deleteBatch(@RequestBody List<Integer> ids) {
-        return majorService.removeByIds(ids);
+        return studentService.removeByIds(ids);
     }
 
     /**
@@ -71,8 +80,8 @@ public class MajorController {
      * @return
      */
     @GetMapping
-    public List<Major> findAll() {
-        return majorService.list();
+    public List<Student> findAll() {
+        return studentService.list();
     }
 
     /**
@@ -81,7 +90,7 @@ public class MajorController {
      */
     @GetMapping("/export")
     public void export(HttpServletResponse response) {
-        List<Major> list = majorService.list();
+        List<Student> list = studentService.list();
         ExcelWriter writer = ExcelUtil.getWriter(true);
         writer.write(list, true);
         response.setContentType("application/vnd.openxmlformats-officedocument.spreadsheetml.sheet;charset=utf-8");
@@ -89,7 +98,7 @@ public class MajorController {
         ServletOutputStream out = null;
 
         try {
-            fileName = URLEncoder.encode("专业信息", "UTF-8");
+            fileName = URLEncoder.encode("学生信息", "UTF-8");
             response.setHeader("Content-Disposition", "attachment;filename=" + fileName + ".xlsx");
             out = response.getOutputStream();
             writer.flush(out, true);
@@ -114,11 +123,12 @@ public class MajorController {
     public Boolean imp(MultipartFile file) {
         InputStream is = null;
         ExcelReader reader = null;
+
         try {
             is = file.getInputStream();
             reader = ExcelUtil.getReader(is);
-            List<Major> list = reader.readAll(Major.class);
-            majorService.saveBatch(list);
+            List<Student> list = reader.readAll(Student.class);
+            studentService.saveBatch(list);
         } catch (IOException e) {
             e.printStackTrace();
         } finally {
@@ -132,23 +142,24 @@ public class MajorController {
         return true;
     }
 
-    /**
-     * 分页查询
-     * @param pageNum
-     * @param pageSize
-     * @param majorName
-     * @return
-     */
     @GetMapping("/page")
-    public IPage<Major> findPage(@RequestParam Integer pageNum,
-                                 @RequestParam Integer pageSize,
-                                 @RequestParam(defaultValue = "") String majorName) {
-        IPage<Major> page = new Page<>(pageNum, pageSize);
-        QueryWrapper<Major> queryWrapper = new QueryWrapper<>();
-        if (!majorName.equals("")) {
-            queryWrapper.like("name", majorName);
+    public IPage<Student> findPage(@RequestParam Integer pageNum,
+                                   @RequestParam Integer pageSize,
+                                   @RequestParam(defaultValue = "") String name,
+                                   @RequestParam(defaultValue = "") String cardId,
+                                   @RequestParam(defaultValue = "") String phone) {
+        IPage<Student> page = new Page<>(pageNum, pageSize);
+        QueryWrapper<Student> queryWrapper = new QueryWrapper<>();
+        if (!name.equals("")) {
+            queryWrapper.like("name", name);
         }
-        return majorService.page(page, queryWrapper);
+        if (!cardId.equals("")) {
+            queryWrapper.like("card_id", cardId);
+        }
+        if (!phone.equals("")) {
+            queryWrapper.like("phone", phone);
+        }
+        queryWrapper.orderByDesc("id");
+        return studentService.page(page, queryWrapper);
     }
-
 }

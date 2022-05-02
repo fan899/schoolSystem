@@ -6,8 +6,10 @@ import cn.hutool.poi.excel.ExcelWriter;
 import com.baomidou.mybatisplus.core.conditions.query.QueryWrapper;
 import com.baomidou.mybatisplus.core.metadata.IPage;
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
-import com.fan.demo.entity.Major;
-import com.fan.demo.service.MajorService;
+import com.fan.demo.common.Result;
+import com.fan.demo.entity.Order;
+import com.fan.demo.entity.Student;
+import com.fan.demo.service.OrderService;
 import io.swagger.annotations.Api;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.web.bind.annotation.*;
@@ -17,33 +19,38 @@ import javax.servlet.ServletOutputStream;
 import javax.servlet.http.HttpServletResponse;
 import java.io.IOException;
 import java.io.InputStream;
-import java.io.UnsupportedEncodingException;
 import java.net.URLEncoder;
 import java.util.List;
 
 /**
- * @ClassName: MajorController
+ * @ClassName: OrderController
  * @Description:
  * @Author fancy
- * @Date 2022/5/1
+ * @Date 2022/5/2
  * @Version 1.0
  */
-@Api(tags = "专业管理")
+@Api(tags = "订单管理")
 @RestController
-@RequestMapping("/major")
-public class MajorController {
+@RequestMapping("/order")
+public class OrderController {
 
     @Autowired
-    private MajorService majorService;
+    private OrderService orderService;
+
+    @PostMapping("/{stuCard}")
+    public Result createOrder(@PathVariable Integer stuCard) {
+//        orderService.saveOrUpdate(order);
+        return null;
+    }
 
     /**
      * 新增&修改
-     * @param major
+     * @param order
      * @return
      */
     @PostMapping
-    public boolean save(@RequestBody Major major) {
-        return majorService.saveOrUpdate(major);
+    public boolean save(@RequestBody Order order) {
+        return orderService.saveOrUpdate(order);
     }
 
     /**
@@ -53,7 +60,7 @@ public class MajorController {
      */
     @DeleteMapping("/{id}")
     public boolean delete(@PathVariable Integer id) {
-        return majorService.removeById(id);
+        return orderService.removeById(id);
     }
 
     /**
@@ -63,7 +70,7 @@ public class MajorController {
      */
     @PostMapping("/del/batch")
     public boolean deleteBatch(@RequestBody List<Integer> ids) {
-        return majorService.removeByIds(ids);
+        return orderService.removeByIds(ids);
     }
 
     /**
@@ -71,8 +78,8 @@ public class MajorController {
      * @return
      */
     @GetMapping
-    public List<Major> findAll() {
-        return majorService.list();
+    public List<Order> findAll() {
+        return orderService.list();
     }
 
     /**
@@ -81,7 +88,7 @@ public class MajorController {
      */
     @GetMapping("/export")
     public void export(HttpServletResponse response) {
-        List<Major> list = majorService.list();
+        List<Order> list = orderService.list();
         ExcelWriter writer = ExcelUtil.getWriter(true);
         writer.write(list, true);
         response.setContentType("application/vnd.openxmlformats-officedocument.spreadsheetml.sheet;charset=utf-8");
@@ -89,7 +96,7 @@ public class MajorController {
         ServletOutputStream out = null;
 
         try {
-            fileName = URLEncoder.encode("专业信息", "UTF-8");
+            fileName = URLEncoder.encode("学生信息", "UTF-8");
             response.setHeader("Content-Disposition", "attachment;filename=" + fileName + ".xlsx");
             out = response.getOutputStream();
             writer.flush(out, true);
@@ -114,11 +121,12 @@ public class MajorController {
     public Boolean imp(MultipartFile file) {
         InputStream is = null;
         ExcelReader reader = null;
+
         try {
             is = file.getInputStream();
             reader = ExcelUtil.getReader(is);
-            List<Major> list = reader.readAll(Major.class);
-            majorService.saveBatch(list);
+            List<Order> list = reader.readAll(Order.class);
+            orderService.saveBatch(list);
         } catch (IOException e) {
             e.printStackTrace();
         } finally {
@@ -132,23 +140,29 @@ public class MajorController {
         return true;
     }
 
-    /**
-     * 分页查询
-     * @param pageNum
-     * @param pageSize
-     * @param majorName
-     * @return
-     */
     @GetMapping("/page")
-    public IPage<Major> findPage(@RequestParam Integer pageNum,
-                                 @RequestParam Integer pageSize,
-                                 @RequestParam(defaultValue = "") String majorName) {
-        IPage<Major> page = new Page<>(pageNum, pageSize);
-        QueryWrapper<Major> queryWrapper = new QueryWrapper<>();
-        if (!majorName.equals("")) {
-            queryWrapper.like("name", majorName);
+    public IPage<Order> findPage(@RequestParam Integer pageNum,
+                                   @RequestParam Integer pageSize,
+                                   @RequestParam(defaultValue = "") String no,
+                                   @RequestParam(defaultValue = "") String stuName,
+                                   @RequestParam(defaultValue = "") String alipayNo,
+                                   @RequestParam(defaultValue = "") String status) {
+        IPage<Order> page = new Page<>(pageNum, pageSize);
+        QueryWrapper<Order> queryWrapper = new QueryWrapper<>();
+        if (!no.equals("")) {
+            queryWrapper.like("no", no);
         }
-        return majorService.page(page, queryWrapper);
+        if (!stuName.equals("")) {
+            queryWrapper.like("STU_NAME", stuName);
+        }
+        if (!alipayNo.equals("")) {
+            queryWrapper.like("ALIPAY_NO", alipayNo);
+        }
+        if (!status.equals("")) {
+            queryWrapper.like("STATUS", status);
+        }
+        queryWrapper.orderByDesc("id");
+        return orderService.page(page, queryWrapper);
     }
 
 }
