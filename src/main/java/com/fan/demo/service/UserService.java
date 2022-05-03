@@ -10,10 +10,12 @@ import com.fan.demo.controller.dto.UserDTO;
 import com.fan.demo.entity.User;
 import com.fan.demo.exception.ServiceException;
 import com.fan.demo.mapper.UserMapper;
+import com.fan.demo.utils.TokenUtils;
 import org.apache.tomcat.util.bcel.Const;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
+import java.util.Date;
 import java.util.List;
 
 @Service
@@ -53,6 +55,9 @@ public class UserService extends ServiceImpl<UserMapper, User> {
             // 参数二：被粘贴的对象
             // 是否忽略大小写
             BeanUtil.copyProperties(one, userDTO, true);
+            // 设置token
+            String token = TokenUtils.genToken(one.getCardId(), one.getPassword());
+            userDTO.setToken(token);
             return userDTO;
         } else { // 当one=null时，说明数据库内部没有对应的数据，则抛出下面这个异常
             throw new ServiceException(Constants.CODE_400, "用户名或密码错误");
@@ -79,6 +84,7 @@ public class UserService extends ServiceImpl<UserMapper, User> {
             one = new User();
             // 将userDTO的数据copy to one里面 userDTO -> user
             BeanUtil.copyProperties(userDTO, one, true);
+            one.setCreatedTime(new Date());
             // 执行插入
             save(one);
         } else { // 如果one不为null，则说明数据库内有相同的身份证和手机号
@@ -87,6 +93,11 @@ public class UserService extends ServiceImpl<UserMapper, User> {
         return one;
     }
 
+    /**
+     * 根据手机号查找用户
+     * @param phone
+     * @return
+     */
     public User userInfoByPhone(String phone) {
         QueryWrapper<User> queryWrapper = new QueryWrapper<>();
         queryWrapper.eq("phone", phone);
@@ -96,6 +107,28 @@ public class UserService extends ServiceImpl<UserMapper, User> {
         } catch (Exception e) {
             LOG.error(e); // 出错时把错误写入log输出
             throw new ServiceException(Constants.CODE_500,"系统错误");
+        }
+        if (one != null) {
+            return one;
+        }else {
+            throw new ServiceException(Constants.CODE_600, "找不到对应用户");
+        }
+    }
+
+    /**
+     * 根据身份证号查找用户
+     * @param cardId
+     * @return
+     */
+    public User getUserByCardId(String cardId) {
+        QueryWrapper<User> queryWrapper = new QueryWrapper<>();
+        queryWrapper.eq("card_id", cardId);
+        User one = null;
+        try {
+            one = getOne(queryWrapper);
+        } catch (Exception e) {
+            LOG.error(e); // 出错时把错误写入log输出
+            throw new ServiceException(Constants.CODE_500, "系统错误");
         }
         if (one != null) {
             return one;

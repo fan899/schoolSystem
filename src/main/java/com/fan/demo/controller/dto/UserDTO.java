@@ -13,4 +13,6 @@ public class UserDTO {
     private String phone;
     private String authentication;
     private String avatarUrl;
+
+    private String token;
 }

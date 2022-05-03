@@ -9,7 +9,11 @@ import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import com.fan.demo.common.Result;
 import com.fan.demo.entity.Order;
 import com.fan.demo.entity.Student;
+import com.fan.demo.entity.User;
+import com.fan.demo.service.MajorService;
 import com.fan.demo.service.OrderService;
+import com.fan.demo.service.StudentService;
+import com.fan.demo.utils.TokenUtils;
 import io.swagger.annotations.Api;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.web.bind.annotation.*;
@@ -37,11 +41,40 @@ public class OrderController {
     @Autowired
     private OrderService orderService;
 
-    @PostMapping("/{stuCard}")
-    public Result createOrder(@PathVariable Integer stuCard) {
-//        orderService.saveOrUpdate(order);
-        return null;
+    @Autowired
+    private StudentService studentService;
+
+    @Autowired
+    private MajorService majorService;
+
+    @PostMapping("/{stuCardId}")
+    public Result creteOrderByStuCardId(@PathVariable String stuCardId) {
+
+        Student student = studentService.getStuByCardId(stuCardId);
+        Double price = majorService.getPriceById(student.getMajorId());
+        orderService.createOrderByStu(student, price);
+
+        return Result.success();
     }
+
+    /**
+     * 根据当前登录用户生成订单
+     * @param
+     * @return
+     */
+    public Result createOrderByCurrentUser() {
+        // 利用token获取当前用户信息
+        User currentUser = TokenUtils.getCurrentUser();
+        if (currentUser != null) {
+            String cardId = currentUser.getCardId();
+            Student stu = studentService.findStuByUserCardId(cardId);
+            String majorId = stu.getMajorId();
+            Double price = majorService.getPriceById(majorId);
+            orderService.createOrderByStu(stu, price);
+        }
+        return Result.success();
+    }
+
 
     /**
      * 新增&修改

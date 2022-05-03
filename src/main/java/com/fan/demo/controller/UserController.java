@@ -11,6 +11,7 @@ import com.fan.demo.common.Result;
 import com.fan.demo.controller.dto.UserDTO;
 import com.fan.demo.entity.User;
 import com.fan.demo.service.UserService;
+import com.fan.demo.utils.TokenUtils;
 import io.swagger.annotations.Api;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.web.bind.annotation.*;
@@ -219,6 +220,12 @@ public class UserController {
         if (!address.equals("")) {
             queryWrapper.like("address", address); // 不添加and也可以，框架会自动补上
         }
+
+        System.out.println("==============================");
+        User user = TokenUtils.getCurrentUser();
+        System.out.println("当前用户姓名："+user.getUsername());
+        System.out.println("==============================");
+
         queryWrapper.orderByDesc("id"); // 修改为根据id倒序显示
 //        queryWrapper.or().like("email", email); // 这个是sql语句 or条件
         return userService.page(page, queryWrapper);// 需要传入翻页对象page和实体对象封装操作类queryWrapper
