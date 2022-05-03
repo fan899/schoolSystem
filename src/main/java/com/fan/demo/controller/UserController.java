@@ -38,6 +38,12 @@ public class UserController {
     @Autowired(required = false)
     private UserService userService;
 
+    /**
+     * 前端登录请求
+     * @param userDTO
+     * @return
+     * @throws Exception
+     */
     @PostMapping("/login")
     public Result login(@RequestBody UserDTO userDTO) throws Exception { //@RequestBody: 将前端的JSON数据转成Java对象
         String username = userDTO.getUsername();
@@ -45,7 +51,36 @@ public class UserController {
         if (StrUtil.isBlank(username) || StrUtil.isBlank(password)) { // 判断传入的数据是否为空或者为空格
             return Result.error(Constants.CODE_400, "参数错误");
         }
-        return Result.success(userService.login(userDTO));
+        UserDTO dto = userService.login(userDTO);
+        return Result.success(dto);
+    }
+
+    /**
+     * 注册请求
+     * @param userDTO
+     * @return
+     */
+    @PostMapping("/register")
+    public Result register(@RequestBody UserDTO userDTO) { // @RequestBody可以把前台json数据映射到实体类中
+        String username = userDTO.getUsername();
+        String password = userDTO.getPassword();
+        String cardId = userDTO.getCardId();
+        String phone = userDTO.getPhone();
+        String authentication = userDTO.getAuthentication();
+        if (StrUtil.isBlank(username) ||
+            StrUtil.isBlank(password) ||
+            StrUtil.isBlank(cardId) ||
+            StrUtil.isBlank(phone) ||
+            StrUtil.isBlank(authentication)) {
+            return Result.error(Constants.CODE_400, "参数错误");
+        }
+        return Result.success(userService.register(userDTO));
+    }
+
+    @GetMapping("/userInfo/{phone}")
+    public Result userInfoByPhone(@PathVariable String phone) {
+        User user = userService.userInfoByPhone(phone);
+        return Result.success(user);
     }
 
     // 新增&修改

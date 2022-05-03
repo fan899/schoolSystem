@@ -1,11 +1,16 @@
 package com.fan.demo.service;
 
+import cn.hutool.core.bean.BeanUtil;
 import cn.hutool.log.Log;
 import com.baomidou.mybatisplus.core.conditions.query.QueryWrapper;
 import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
+import com.fan.demo.common.Constants;
+import com.fan.demo.common.Result;
 import com.fan.demo.controller.dto.UserDTO;
 import com.fan.demo.entity.User;
+import com.fan.demo.exception.ServiceException;
 import com.fan.demo.mapper.UserMapper;
+import org.apache.tomcat.util.bcel.Const;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
@@ -24,7 +29,7 @@ public class UserService extends ServiceImpl<UserMapper, User> {
 
     private static final Log LOG = Log.get();
 
-    public User  login(UserDTO userDTO) throws Exception {
+    public UserDTO  login(UserDTO userDTO) {
         QueryWrapper<User> queryWrapper = new QueryWrapper<>(); // 新建QueryWrapper对象
         queryWrapper.eq("username", userDTO.getUsername()); // 传入username
         queryWrapper.eq("password", userDTO.getPassword()); // 传入password
@@ -34,15 +39,69 @@ public class UserService extends ServiceImpl<UserMapper, User> {
         User one = null;
         try {
             one = getOne(queryWrapper);
-            return one ;
-        } catch (Exception e) { // 当返回的数据不止一条时，直接返回false
+        } catch (Exception e) {  // 当返回的数据不止一条时，会发生异常被下面的catch捕获
             LOG.error(e); // 出错时把错误写入log输出
-            throw new Exception("登录信息有误");
+            throw new ServiceException(Constants.CODE_500,"系统错误");
         }
-
+        // 如果没发生异常就执行下列判断
+        if (one != null) { // 判断数据库内是否有对应的数据
+            // 将one所包含的user信息copy到userDTO中
+            // 因为one存储的是整个User实体类的信息
+            // 而userDTO存储的仅是前端需要的若干条信息
+            // 所以需要将one的需要的数据利用hutool映射到userDTO中
+            // 参数一：被复制的对象
+            // 参数二：被粘贴的对象
+            // 是否忽略大小写
+            BeanUtil.copyProperties(one, userDTO, true);
+            return userDTO;
+        } else { // 当one=null时，说明数据库内部没有对应的数据，则抛出下面这个异常
+            throw new ServiceException(Constants.CODE_400, "用户名或密码错误");
+        }
         // 当数据库中存在相同用户名和密码的数据时，会返回两条或多条数据，进而导致后台报错，因为getOne仅能接收一条数据
 //        User one = getOne(queryWrapper); // 根据传入的数据搜索，如果能够找到符合的数据，则存入one对象，否则为null
 //        return one != null;
+    }
+
+    public User register(UserDTO userDTO) {
+        QueryWrapper<User> queryWrapper = new QueryWrapper<>(); // 新建QueryWrapper对象
+        queryWrapper.eq("card_id", userDTO.getCardId()); // 传入身份证号码
+        queryWrapper.eq("phone", userDTO.getPhone()); // 传入手机号码
+        User one = null;
+
+        try {
+            one = getOne(queryWrapper);
+        } catch (Exception e) {
+            LOG.error(e); // 出错时把错误写入log输出
+            throw new ServiceException(Constants.CODE_500,"系统错误");
+        }
+        if (one == null) { // 当数据库检索不到时，才执行插入操作
+            // one为null，需要new 成 User对象
+            one = new User();
+            // 将userDTO的数据copy to one里面 userDTO -> user
+            BeanUtil.copyProperties(userDTO, one, true);
+            // 执行插入
+            save(one);
+        } else { // 如果one不为null，则说明数据库内有相同的身份证和手机号
+            throw new ServiceException(Constants.CODE_600, "用户已存在");
+        }
+        return one;
+    }
+
+    public User userInfoByPhone(String phone) {
+        QueryWrapper<User> queryWrapper = new QueryWrapper<>();
+        queryWrapper.eq("phone", phone);
+        User one = null;
+        try {
+            one = getOne(queryWrapper);
+        } catch (Exception e) {
+            LOG.error(e); // 出错时把错误写入log输出
+            throw new ServiceException(Constants.CODE_500,"系统错误");
+        }
+        if (one != null) {
+            return one;
+        }else {
+            throw new ServiceException(Constants.CODE_600, "找不到对应用户");
+        }
     }
 
 
