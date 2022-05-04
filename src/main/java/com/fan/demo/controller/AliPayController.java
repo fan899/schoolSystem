@@ -9,6 +9,7 @@ import com.alipay.api.DefaultAlipayClient;
 import com.alipay.api.internal.util.AlipaySignature;
 import com.alipay.api.request.AlipayTradePagePayRequest;
 import com.alipay.api.request.AlipayTradePayRequest;
+import com.alipay.api.request.AlipayTradeRefundRequest;
 import com.alipay.api.response.AlipayTradeRefundResponse;
 import com.fan.demo.common.Constants;
 import com.fan.demo.common.Result;
@@ -16,6 +17,7 @@ import com.fan.demo.config.AlipayConfig;
 import com.fan.demo.controller.dto.Alipay;
 import com.fan.demo.exception.ServiceException;
 import com.fan.demo.mapper.OrderMapper;
+import com.fan.demo.service.OrderService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PostMapping;
@@ -27,6 +29,7 @@ import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 import javax.xml.crypto.Data;
 import java.io.IOException;
+import java.util.Date;
 import java.util.HashMap;
 import java.util.Map;
 
@@ -50,8 +53,8 @@ public class AliPayController {
     @Autowired
     private AlipayConfig alipayConfig;
 
-    @Resource // ?为什么用autowired不行?
-    private OrderMapper orderMapper;
+    @Autowired
+    private OrderService orderService;
 
     /**
      * 向支付宝发送支付请求
@@ -110,7 +113,7 @@ public class AliPayController {
      * @return
      */
 
-    /*@PostMapping("/notify") // 必须使用POST接口
+    @PostMapping("/notify") // 必须使用POST接口
     public Result payNotify(HttpServletRequest httpRequest) {
         if (httpRequest.getParameter("trade_status").equals("TRADE_SUCCESS")) {
             System.out.println("===========支付宝异步回调==========");
@@ -144,14 +147,15 @@ public class AliPayController {
 
                     // 更新订单支付状态
                     String orderStatus = "已支付";
-                    orderMapper.updateState(tradeNo, orderStatus, gmtPayment, alipayTradeNo);
+                    // 分别插入本系统的订单号，订单状态，付款时间，支付宝交易流水
+                    orderService.updateStateToPayed(tradeNo, orderStatus, gmtPayment, alipayTradeNo);
                 }
             } catch (AlipayApiException e) {
                 e.printStackTrace();
             }
         }
         return Result.success();
-    }*/
+    }
 
     /**
      * 退款接口
@@ -159,14 +163,19 @@ public class AliPayController {
      * @return
      */
 
-/*
     @GetMapping("/return")
     public Result returnPay(Alipay alipay) {
         // 1.创建Client，通用SDK提供的client，负责调用支付宝api
-        AlipayClient alipayClient = new DefaultAlipayClient(GATEWAY_URL, alipayConfig.getAppId(),
-                alipayConfig.getAppPrivateKey(), FORMAT, CHARSET, alipayConfig.getAlipayPublicKey(), SIGN_TYPE);
+        AlipayClient alipayClient = new DefaultAlipayClient(
+                GATEWAY_URL,
+                alipayConfig.getAppId(),
+                alipayConfig.getAppPrivateKey(),
+                FORMAT,
+                CHARSET,
+                alipayConfig.getAlipayPublicKey(),
+                SIGN_TYPE);
         // 2.创建Request，设置参数
-        AlipayTradePayRequest request = new AlipayTradePayRequest();
+        AlipayTradeRefundRequest request = new AlipayTradeRefundRequest();
         JSONObject bizContent = new JSONObject();
         // 支付宝回调的订单流水号
         bizContent.set("trade_no", alipay.getAlipayTraceNo());
@@ -186,8 +195,8 @@ public class AliPayController {
 
                 // 4.更新数据库状态
                 String orderStatus = "已退款";
-                String now = DateUtil.now();
-                orderMapper.updatePayState(alipay.getTraceNo(), orderStatus, now);
+                Date now = new Date();
+                orderService.updatePayState(alipay.getTraceNo(), orderStatus, now);
                 return Result.success();
             }else {
                 System.out.println(refundResponse.getBody());
@@ -199,7 +208,6 @@ public class AliPayController {
         return Result.success();
     }
 
-*/
 
 
 

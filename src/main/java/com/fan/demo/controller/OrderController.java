@@ -48,13 +48,24 @@ public class OrderController {
     private MajorService majorService;
 
     @PostMapping("/{stuCardId}")
-    public Result creteOrderByStuCardId(@PathVariable String stuCardId) {
+    public Result createOrderByStuCardId(@PathVariable String stuCardId) {
 
         Student student = studentService.getStuByCardId(stuCardId);
         Double price = majorService.getPriceById(student.getMajorId());
         orderService.createOrderByStu(student, price);
 
         return Result.success();
+    }
+
+    /**
+     * 接收个人中心的信息返回缴费状态
+     * @param CardId
+     * @return
+     */
+    @GetMapping("/status/{CardId}")
+    public Result findStatusById(@PathVariable String CardId) {
+        String status = orderService.getStautsByCardId(CardId);
+        return Result.success(status);
     }
 
     /**

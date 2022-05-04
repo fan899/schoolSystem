@@ -94,13 +94,13 @@ public class UserService extends ServiceImpl<UserMapper, User> {
     }
 
     /**
-     * 根据手机号查找用户
-     * @param phone
+     * 根据身份证号查找用户
+     * @param cardId
      * @return
      */
-    public User userInfoByPhone(String phone) {
+    public User userInfoByCardId(String cardId) {
         QueryWrapper<User> queryWrapper = new QueryWrapper<>();
-        queryWrapper.eq("phone", phone);
+        queryWrapper.eq("CARD_ID", cardId);
         User one = null;
         try {
             one = getOne(queryWrapper);

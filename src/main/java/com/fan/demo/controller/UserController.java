@@ -1,5 +1,6 @@
 package com.fan.demo.controller;
 
+import cn.hutool.core.bean.BeanUtil;
 import cn.hutool.poi.excel.ExcelReader;
 import cn.hutool.poi.excel.ExcelUtil;
 import cn.hutool.poi.excel.ExcelWriter;
@@ -9,7 +10,10 @@ import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import com.fan.demo.common.Constants;
 import com.fan.demo.common.Result;
 import com.fan.demo.controller.dto.UserDTO;
+import com.fan.demo.entity.OV;
+import com.fan.demo.entity.Order;
 import com.fan.demo.entity.User;
+import com.fan.demo.service.OrderService;
 import com.fan.demo.service.UserService;
 import com.fan.demo.utils.TokenUtils;
 import io.swagger.annotations.Api;
@@ -38,6 +42,9 @@ public class UserController {
 
     @Autowired(required = false)
     private UserService userService;
+
+    @Autowired
+    private OrderService orderService;
 
     /**
      * 前端登录请求
@@ -78,10 +85,21 @@ public class UserController {
         return Result.success(userService.register(userDTO));
     }
 
-    @GetMapping("/userInfo/{phone}")
-    public Result userInfoByPhone(@PathVariable String phone) {
-        User user = userService.userInfoByPhone(phone);
-        return Result.success(user);
+    /**
+     * 生成个人中心的相关信息
+     * @param cardId
+     * @return
+     */
+    @GetMapping("/userInfo/{cardId}")
+    public Result userInfoByPhone(@PathVariable String cardId) {
+        OV ov = new OV();
+        Order order = orderService.orderInfoByCardId(cardId);
+        User user = userService.userInfoByCardId(cardId);
+        BeanUtil.copyProperties(user, ov);
+        ov.setStatus(order.getStatus());
+        ov.setNo(order.getNo());
+        ov.setPrice(order.getPrice());
+        return Result.success(ov);
     }
 
     // 新增&修改
